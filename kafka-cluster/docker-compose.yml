@@ -62,3 +62,13 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
 
+  producer:
+    build:
+      context: ./producer
+    container_name: kafka-producer
+    volumes:
+      - ./input:/app/input
+    depends_on:
+      - broker1
+    networks:
+      - default

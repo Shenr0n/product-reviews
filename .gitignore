@@ -1,3 +1,5 @@
 csvfile/split_files
 .ipynb_checkpoints
 input/
+extra_input/
+.parquet
