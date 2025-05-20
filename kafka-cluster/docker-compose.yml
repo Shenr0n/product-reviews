@@ -1,12 +1,16 @@
 version: '3.8'
 
 services:
+
+# Zookeeper service
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
     hostname: zookeeper
     container_name: zookeeper
     environment:
+      #client port is for the kafka brokers which are clients of zookeeper, used to communicate with zookeeper
       ZOOKEEPER_CLIENT_PORT: 2181
+      #Heartbeat time in ms
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
@@ -17,15 +21,25 @@ services:
     container_name: broker1
     ports:
       - "9092:9092"
+    # First zookeeper should start
     depends_on:
       - zookeeper
     environment:
+      #unique id for each kafka broker
       KAFKA_BROKER_ID: 1
+      #where the broker can connect with zookeeper
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      #internal and external connections with different ports but same PLAINTEXT (unencrypted TCP) protocol.
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      #29092 is for access by kafka brokers within the containers, 9092 is for external host access
+      #kafka listens on the following listeners
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      #how clients can connect and access the broker in cluster
+      #each broker advertises itself with hostname and localhost
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker1:29092,PLAINTEXT_HOST://localhost:9092
+      #topic replication for fault tolerance
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      #to prevent errors due to automatic creation of topics within the cluster
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
 
   broker2:
@@ -64,15 +78,18 @@ services:
 
   producer:
     build:
+      # To use Dockerfile and files inside the folder specified in the context to create the microservice
       context: ./producer
     container_name: kafka-producer
     volumes:
+    # mount local directory into container
       - ./input:/app/input
     depends_on:
       - broker1
     networks:
       - default
 
+# Consumer
   spark:
     build:
       context: ./spark_consumer
@@ -80,4 +97,5 @@ services:
     depends_on:
       - broker1
     volumes:
+    # mount output directory into container for writing
       - ./output/product_reviews:/opt/output

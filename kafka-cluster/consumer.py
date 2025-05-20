@@ -29,8 +29,8 @@ try:
         data = message.value
         buffer.append(data)
 
-        # Parquet file for every 1000 messages
-        if len(buffer) >= 1000:
+        # Parquet file for every 500 messages
+        if len(buffer) >= 500:
             df = pd.DataFrame(buffer)
             file_path = os.path.join(OUTPUT_DIR, f"batch_{uuid.uuid4().hex}.parquet")
             df.to_parquet(file_path, engine="fastparquet", index=False)
