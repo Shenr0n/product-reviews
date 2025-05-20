@@ -4,7 +4,6 @@ import pandas as pd
 import json
 from confluent_kafka import Producer
 
-# Kafka configuration (matches your Docker network)
 kafka_config = {
     'bootstrap.servers': 'broker1:29092',
     'acks': 'all',
@@ -13,13 +12,12 @@ kafka_config = {
 
 producer = Producer(kafka_config)
 
-# Directory where CSV files are mounted
 csv_dir = "./input"
 
 # Kafka topic to send messages to
 topic_name = "product-reviews"
 
-def acked(err, msg):
+def acknowledged(err, msg):
     if err:
         print(f"Failed to deliver message: {err}")
     else:
@@ -37,7 +35,7 @@ def send_csv_to_kafka(file_path):
             "summary": str(row["Summary"]),
             "text": str(row["Text"])
         }
-        producer.produce(topic_name, value=json.dumps(msg), callback=acked)
+        producer.produce(topic_name, value=json.dumps(msg), callback=acknowledged)
     producer.flush()
 
 if __name__ == "__main__":

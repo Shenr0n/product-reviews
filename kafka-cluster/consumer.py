@@ -21,7 +21,7 @@ consumer = KafkaConsumer(
     value_deserializer=lambda x: json.loads(x.decode("utf-8"))
 )
 
-# Prepare a buffer to collect messages
+# Buffer to collect messages
 buffer = []
 
 try:
@@ -29,7 +29,7 @@ try:
         data = message.value
         buffer.append(data)
 
-        # Write to a unique Parquet file every 100 messages
+        # Parquet file for every 1000 messages
         if len(buffer) >= 1000:
             df = pd.DataFrame(buffer)
             file_path = os.path.join(OUTPUT_DIR, f"batch_{uuid.uuid4().hex}.parquet")

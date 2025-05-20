@@ -72,3 +72,12 @@ services:
       - broker1
     networks:
       - default
+
+  spark:
+    build:
+      context: ./spark_consumer
+    container_name: spark
+    depends_on:
+      - broker1
+    volumes:
+      - ./output/product_reviews:/opt/output

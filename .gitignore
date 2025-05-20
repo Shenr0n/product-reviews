@@ -3,3 +3,4 @@ csvfile/split_files
 input/
 extra_input/
 .parquet
+output/

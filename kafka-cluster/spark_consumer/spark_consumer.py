@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col
 from pyspark.sql.types import StructType, StringType, IntegerType
 
-# Define the schema matching the Kafka messages
+# Schema based on kafka messages
 schema = StructType() \
     .add("id", StringType()) \
     .add("product_id", StringType()) \
@@ -12,30 +12,28 @@ schema = StructType() \
     .add("summary", StringType()) \
     .add("text", StringType())
 
-# Create Spark session
-spark = SparkSession.builder \
-    .appName("KafkaToParquet") \
-    .getOrCreate()
+spark = SparkSession.builder.appName("KafkaToParquet").getOrCreate()
 
-#.option("kafka.bootstrap.servers", "broker1:29092")
+
 # Read stream from Kafka
+#.option("kafka.bootstrap.servers", "broker1:29092")
 df = spark.readStream \
     .format("kafka") \
-    .option("kafka.bootstrap.servers", "localhost:9092") \
+    .option("kafka.bootstrap.servers", "broker1:29092") \
     .option("subscribe", "product-reviews") \
     .option("startingOffsets", "earliest") \
     .load()
 
-# Parse JSON value
 df_parsed = df.selectExpr("CAST(value AS STRING)") \
     .select(from_json(col("value"), schema).alias("data")) \
     .select("data.*")
 
-# Write stream to Parquet
+
 df_parsed.writeStream \
+    .trigger(processingTime = '10 seconds') \
     .format("parquet") \
-    .option("path", "./output") \
-    .option("checkpointLocation", "./checkpoint") \
+    .option("path", "/opt/output") \
+    .option("checkpointLocation", "/opt/output/checkpoint") \
     .outputMode("append") \
     .start() \
-    .awaitTermination()
+    .awaitTermination(600)
